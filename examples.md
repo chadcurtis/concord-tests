@@ -23,7 +23,7 @@ Conventions used throughout:
 | 5 | Delete | [§2.3](#23-kind-5--delete) |
 | 3302 | Edit | [§2.4](#24-kind-3302--edit) |
 | 3310 | WebXDC peer signal | [§2.5](#25-kind-3310--webxdc-peer-signal) |
-| 3311 | Typing indicator (ephemeral) | [§2.6](#26-kind-3311--typing-indicator) |
+| 23311 | Typing indicator (ephemeral) | [§2.6](#26-kind-23311--typing-indicator) |
 | 3306 | Join / Leave | [§3.1](#31-kind-3306--join--leave) |
 | 3309 | Kick | [§3.2](#32-kind-3309--kick) |
 | 3312 | Guestbook snapshot | [§3.3](#33-kind-3312--guestbook-snapshot) |
@@ -33,7 +33,7 @@ Conventions used throughout:
 | 13302 | Community List | [§6.2](#62-kind-13302--community-list) |
 | 13303 | Invite List | [§6.3](#63-kind-13303--invite-list) |
 
-Retired kinds (`3300, 3301, 3304, 3305, 3307, 23308`) have no examples: their numbers are burned, never reused (CORD-02, Appendix B).
+Retired kinds (`3300, 3301, 3304, 3305, 3307, 3311, 23308`) have no examples: their numbers are burned, never reused (CORD-02, Appendix B).
 
 ## 1. The envelope
 
@@ -106,7 +106,7 @@ Identical structure to `1059`, but relays MUST NOT store it: broadcast to live s
 {
   "kind": 21059,
   "pubkey": "<channel_pk>",
-  "content": nip44_encrypt(conv_key, { /* kind 20013 seal around a kind 3311 rumor, §2.6 */ }),
+  "content": nip44_encrypt(conv_key, { /* kind 20013 seal around a kind 23311 rumor, §2.6 */ }),
   "tags": [ ["p", "<random ephemeral pubkey>"] ],
   "created_at": 1686840217,
   "sig": "<channel stream signature>"
@@ -229,13 +229,13 @@ Realtime peer signaling for WebXDC apps. The CORDs register the kind but don't y
 }
 ```
 
-### 2.6 Kind 3311 — Typing indicator
+### 2.6 Kind 23311 — Typing indicator
 
-The one **ephemeral** action: same seal-and-rumor shape at the same Channel address, but the outer wrap is kind `21059` (§1.3), so relays never store it. Presence of the event is the signal; the rumor carries nothing.
+The one **ephemeral** action: same seal-and-rumor shape at the same Channel address, but the outer wrap is kind `21059` (§1.3) and the rumor kind is ephemeral-range too, so relays never store any layer of it. Presence of the event is the signal; the rumor carries nothing.
 
 ```jsonc
 {
-  "kind": 3311,
+  "kind": 23311,
   "pubkey": "<author>",
   "content": "",
   "tags": [
