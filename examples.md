@@ -43,6 +43,8 @@ Every durable plane event is the same three-layer shape (CORD-01): a kind `1059`
 
 Chat, Guestbook, and rekey planes use the **encrypted seal** (kind `20013`): the rumor is NIP-44-encrypted *again* inside the already-encrypted wrap, so it can never be lifted out as a standalone public event (CORD-02 §5).
 
+Because the wrap reverses NIP-59 (fixed author, ephemeral `p`), delivery depends on relays **not** enforcing NIP-59's optional `p`-tag guard ("relays SHOULD only serve kind 1059 events intended for the marked recipient"): members subscribe by the stream author, and nobody is the random `p`. Communities must choose relays accordingly.
+
 ```jsonc
 {
   "id": "<wrap id>",
@@ -69,7 +71,8 @@ Chat, Guestbook, and rekey planes use the **encrypted seal** (kind `20013`): the
     "sig": "<author's real signature>"
   }),
   "tags": [
-    ["p", "<random ephemeral pubkey>"]            // ephemeral "p", fixed author — NIP-59 reversed (CORD-01)
+    ["p", "<random ephemeral pubkey>"]            // ephemeral "p", fixed author — NIP-59 reversed (CORD-01).
+                                                  // Keep this key's secret if you want to NIP-09-delete the wrap later (CORD-01).
   ],
   "created_at": 1686840217,
   "sig": "<stream key signature>"
@@ -85,6 +88,7 @@ The Control Plane **only** (CORD-02 §5). Same wrap, but the seal's `content` ho
   "kind": 1059,
   "pubkey": "<control_pk>",
   "content": nip44_encrypt(conv_key, {
+    "id": "<seal id>",
     "kind": 20014,                                // plaintext seal
     "pubkey": "<actor's real pubkey>",
     "content": json_stringify({ /* the kind 3308 rumor, §4 */ }),  // the rumor's serialized JSON string, not a ciphertext
@@ -119,7 +123,7 @@ All Chat rumors ride an encrypted seal (§1.1) at the Channel's address, and MUS
 
 ### 2.1 Kind 9 — Message
 
-NIP-29 shape: the `content` is the message text.
+NIP-C7 shape: the `content` is the message text. (Not NIP-29, whose messages require an `h` tag and whose kind 9 definition has since been dropped; the registry assigns kind 9 to NIP-C7.)
 
 ```jsonc
 {
@@ -155,7 +159,7 @@ A reply quotes the parent with a `q` tag (NIP-C7), citing the parent message's *
 
 ### 2.2 Kind 7 — Reaction
 
-NIP-25 shape: `content` is the reaction (`"+"`, an emoji, …), tags name the reacted-to message and its author.
+NIP-25 shape: `content` is the reaction (`"+"`, an emoji, …), tags name the reacted-to message, its author, and its kind.
 
 ```jsonc
 {
@@ -167,7 +171,8 @@ NIP-25 shape: `content` is the reaction (`"+"`, an emoji, …), tags name the re
     ["epoch", "0"],
     ["ms", "112"],
     ["e", "<message rumor id>"],
-    ["p", "<message author>"]
+    ["p", "<message author>"],
+    ["k", "9"]
   ],
   "created_at": 1686840350
 }
@@ -175,7 +180,9 @@ NIP-25 shape: `content` is the reaction (`"+"`, an emoji, …), tags name the re
 
 ### 2.3 Kind 5 — Delete
 
-NIP-09 shape: `e` tags name the author's own rumors to delete, `content` an optional reason. A member's delete of their own past message is honored always — even after Dissolution (CORD-02 §9).
+NIP-09 shape: `e` tags name the author's own rumors to delete, `k` their kind, `content` an optional reason. A member's delete of their own past message is honored always — even after Dissolution (CORD-02 §9).
+
+Note this delete names a *rumor* id relays never saw, so it is semantic **within the plane only** — members stop rendering the message, but the wrap ciphertext stays on relays. Scrubbing the ciphertext itself is a separate, best-effort NIP-09 delete of the wrap by its `p` tag (CORD-01), possible only if the publishing client kept the ephemeral key.
 
 ```jsonc
 {
@@ -186,7 +193,8 @@ NIP-09 shape: `e` tags name the author's own rumors to delete, `content` an opti
     ["channel", "<channel_id>"],
     ["epoch", "0"],
     ["ms", "533"],
-    ["e", "<own message rumor id>"]
+    ["e", "<own message rumor id>"],
+    ["k", "9"]
   ],
   "created_at": 1686841000
 }
@@ -454,6 +462,8 @@ Three kinds relays see bare, signed by ordinary (or token-derived) keys.
 ### 6.1 Kind 33301 — public invite bundle (CORD-05 §2)
 
 Addressable, at the token-derived coordinate, signed by the token-derived `bundle_signer`; a fetcher drops any event at the coordinate not carrying that signer's signature. The `vsk` tag marks it live (`6`) or a revocation tombstone (`9`).
+
+The signature guard excludes only parties *without* the link: since `bundle_signer` derives from the token, **any link-holder can re-post, replace, or tombstone the bundle** — an accepted tradeoff (CORD-05 §2). A hostile replacement still can't smuggle a false owner (the `community_id` self-certifies, CORD-05 §1), but a malicious invitee can kill or corrupt the link; the remedy is minting a fresh one.
 
 ```jsonc
 // live bundle
