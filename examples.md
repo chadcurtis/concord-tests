@@ -78,7 +78,7 @@ Chat, Guestbook, and rekey planes use the **encrypted seal** (kind `20013`): the
 
 ### 1.2 Kind 20014 — the plaintext seal
 
-The Control Plane **only** (CORD-02 §5). Same wrap, but the seal's `content` holds the rumor verbatim rather than ciphertext, so a compaction can re-wrap the signed edition into a new epoch with the signature intact (CORD-06). See §4 for the full Control edition example inside this seal.
+The Control Plane **only** (CORD-02 §5). Same wrap, but the seal's `content` holds the rumor's serialized JSON string rather than ciphertext (byte-verbatim, CORD-01), so a compaction can re-wrap the signed edition into a new epoch with the signature intact (CORD-06). See §4 for the full Control edition example inside this seal.
 
 ```jsonc
 {
@@ -87,7 +87,7 @@ The Control Plane **only** (CORD-02 §5). Same wrap, but the seal's `content` ho
   "content": nip44_encrypt(conv_key, {
     "kind": 20014,                                // plaintext seal
     "pubkey": "<actor's real pubkey>",
-    "content": { /* the kind 3308 rumor verbatim, §4 — an object, not a ciphertext string */ },
+    "content": json_stringify({ /* the kind 3308 rumor, §4 */ }),  // the rumor's serialized JSON string, not a ciphertext
     "tags": [],
     "created_at": 1686840217,
     "sig": "<actor's real signature>"
