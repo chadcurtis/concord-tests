@@ -593,7 +593,7 @@ The encrypted list's plaintext:
 
 The one event riding a **standard** NIP-59 giftwrap (CORD-05 §6): ephemeral wrap author, the recipient in the `p` tag, a kind `13` seal — not the reversed stream wrap of §1 — plus the outer `["k", "3313"]` that makes invites indexable. A recipient fetches exactly their invites with `{"kinds":[1059], "#p":["<me>"], "#k":["3313"]}`, no bulk decryption of their giftwrap inbox required. The outer tag is an unsigned hint; the rumor's kind is the authority.
 
-The rumor carries the same information an invite *link* (CORD-05 §2) carries — the bundle's coordinate, the unlock token, the bootstrap relays — natively as tags, never the URL string or its packed fragment encoding (CORD-05 §6), and never keys, so revocation, refresh, and Registry accounting apply to a Direct Invite exactly as to the link it mirrors. A client renders it from the rumor alone and touches no network — no bundle fetch, no bootstrap relays — until the user acts on it (CORD-05 §6).
+The rumor carries the §6.1 `CommunityInvite` bundle itself as its content — no coordinate, no token, nothing to fetch (the giftwrap already encrypts to the recipient) — validated exactly as a fetched bundle: the self-certifying `community_id`, the CORD-05 §1 bounds, `expires_at`. A key handoff, not a standing door: unrevocable once landed, absent from the Registry, and it never flips the Community Public, which is what lets a Private Community grow by personal invitation (CORD-05 §6). Nothing happens on receipt — no relay connection, no icon fetch, no Join — until the user accepts.
 
 ```jsonc
 {
@@ -608,13 +608,8 @@ The rumor carries the same information an invite *link* (CORD-05 §2) carries �
       "id": "<rumor id>",
       "kind": 3313,
       "pubkey": "<inviter's real pubkey>",
-      "content": "Come hang out with us!",        // optional personal note, may be empty
-      "tags": [
-        ["a", "33301:<link_signer pubkey hex>:"], // the bundle's coordinate (kind:pubkey:d, d empty)
-        ["token", "<16 bytes hex>"],              // the unlock token — bundle_key = hkdf(token, "concord/invite-key")
-        ["relay", "wss://jskitty.com/nostr"],     // bootstrap relays, literal URLs, at most 3
-        ["relay", "wss://relay.ditto.pub"]
-      ],
+      "content": json_stringify({ /* the CommunityInvite bundle, §6.1 */ }),
+      "tags": [],
       "created_at": 1719800000
     }),
     "tags": [],
@@ -624,7 +619,7 @@ The rumor carries the same information an invite *link* (CORD-05 §2) carries �
   "tags": [
     ["p", "<recipient pubkey>"],                  // classic NIP-59: fixed recipient, ephemeral author
     ["k", "3313"],                                // the index hint (CORD-05 §6)
-    ["expiration", "1735689600"]                  // optional NIP-40, matching the link's expires_at
+    ["expiration", "1735689600"]                  // optional NIP-40, matching the bundle's expires_at
   ],
   "created_at": 1719731502,                       // NIP-59: tweaked into the past
   "sig": "<ephemeral key signature>"
