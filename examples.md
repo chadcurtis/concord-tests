@@ -258,7 +258,7 @@ An **ephemeral** action: same seal-and-rumor shape at the same Channel address, 
 
 ### 2.7 Kind 23313 — Voice presence
 
-Ephemeral like the typing indicator (`21059` wrap, §1.3): call heartbeats are realtime-only, nothing worth storing. The `content` is the verb; a `joined` repeats every ~30s carrying the broker-assigned SFU identity and the broker origin, goes stale after ~90s, and a `left` omits both (CORD-07 §4).
+Ephemeral like the typing indicator (`21059` wrap, §1.3): call heartbeats are realtime-only, nothing worth storing. The `content` is the verb; a `joined` repeats every 30 seconds carrying the broker-assigned SFU identity and the broker origin, goes stale after 90 seconds (three missed heartbeats), and a `left` omits both (CORD-07 §4).
 
 ```jsonc
 // Joined (also the heartbeat)
@@ -412,10 +412,11 @@ Per-`vsk` `content` payloads:
 
 ### vsk 2 — Channel metadata (CORD-03 §2)
 
-`eid` = the `channel_id`. Gated by `MANAGE_CHANNELS`.
+`eid` = the `channel_id`. Gated by `MANAGE_CHANNELS`. The optional `voice` flag marks a callable Channel (CORD-07), absent means false.
 
 ```jsonc
 { "name": "general", "private": false }
+{ "name": "lounge",  "private": false, "voice": true }
 ```
 
 A deletion is an edition setting the terminal flag:
