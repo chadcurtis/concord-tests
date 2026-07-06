@@ -593,7 +593,7 @@ The encrypted list's plaintext:
 
 The one event riding a **standard** NIP-59 giftwrap (CORD-05 §6): ephemeral wrap author, the recipient in the `p` tag, a kind `13` seal — not the reversed stream wrap of §1 — plus the outer `["k", "3313"]` that makes invites indexable. A recipient fetches exactly their invites with `{"kinds":[1059], "#p":["<me>"], "#k":["3313"]}`, no bulk decryption of their giftwrap inbox required. The outer tag is an unsigned hint; the rumor's kind is the authority.
 
-The rumor carries an invite *link* (CORD-05 §2), never keys, so revocation, refresh, and Registry accounting apply to a Direct Invite exactly as to the link it carries. A client renders it from the rumor alone and touches no network — no bundle fetch, no fragment relays — until the user acts on it (CORD-05 §6).
+The rumor carries the same information an invite *link* (CORD-05 §2) carries — the bundle's coordinate, the unlock token, the bootstrap relays — natively as tags, never the URL string or its packed fragment encoding (CORD-05 §6), and never keys, so revocation, refresh, and Registry accounting apply to a Direct Invite exactly as to the link it mirrors. A client renders it from the rumor alone and touches no network — no bundle fetch, no bootstrap relays — until the user acts on it (CORD-05 §6).
 
 ```jsonc
 {
@@ -610,7 +610,10 @@ The rumor carries an invite *link* (CORD-05 §2), never keys, so revocation, ref
       "pubkey": "<inviter's real pubkey>",
       "content": "Come hang out with us!",        // optional personal note, may be empty
       "tags": [
-        ["u", "https://vectorapp.io/invite/<naddr>#<fragment>"]   // the CORD-05 §2 link, verbatim
+        ["a", "33301:<link_signer pubkey hex>:"], // the bundle's coordinate (kind:pubkey:d, d empty)
+        ["token", "<16 bytes hex>"],              // the unlock token — bundle_key = hkdf(token, "concord/invite-key")
+        ["relay", "wss://jskitty.com/nostr"],     // bootstrap relays, literal URLs, at most 3
+        ["relay", "wss://relay.ditto.pub"]
       ],
       "created_at": 1719800000
     }),
